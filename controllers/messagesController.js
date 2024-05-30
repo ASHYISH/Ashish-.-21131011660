@@ -1,41 +1,30 @@
 const messageModel = require("../model/messageModel");
 
-module.exports.addMessage = async (req, res, next) => {
+module.exports.register = async (req, res, next) => {
   try {
-    const { from, to, message } = req.body;
-    const data = await messageModel.create({
-      message: { text: message },
-      users: [from, to],
-      sender: from,
-    });
-
-    if (data) return res.json({ msg: "Message added successfully" });
-    return res.json({ msg: "Fail to  add message  to database" });
+    return res.json({
+      "companyName" : "AffordMedical",
+      "ownerName" : "Ashish",
+      "rollNo" : "21131011660",
+      "ownerEmail":"ashish.21scse1010071@gagotiasuniversity.edu.in",
+      "accessCode" : "TMaXNS"
+  });
   } catch (ex) {
     next(ex);
   }
 };
-module.exports.getAllMessage = async (req, res, next) => {
-  try {
-    const { from, to } = req.body;
-
-    const messages = await messageModel
-      .find({
-        users: {
-          $all: [from, to],
-        },
-      })
-      .sort({ updatedAt: 1 });
-
-    const projectedMessages = messages.map((msg) => {
-      return {
-        fromSelf: msg.sender.toString() === from,
-        message: msg.message.text,
-      };
-    });
-    res.json(projectedMessages);
-  } catch (ex) {
-    console.error("Failed to fetch messages:", ex);
+module.exports.auth = async (req, res, next) => {
+try{
+  res.json({
+    "companyName": "AffordMedical",
+    "clientID": "e2c7be2e-65d3-4e9b-9c3a-0a0eb9d7257e",
+    "clientSecret": "HejlcldDedWLzVMY",
+    "ownerName": "Ashish",
+    "ownerEmail": "ashish.21scse1010071@gagotiasuniversity.edu.in",
+    "rollNo": "21131011660"
+});
+}
+  catch (ex) {
     next(ex);
   }
 };

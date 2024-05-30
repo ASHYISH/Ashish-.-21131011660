@@ -1,67 +1,51 @@
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes");
 const messagesRoute = require("./routes/messagesRoute");
-const socket = require("socket.io");
-
 const app = express();
 require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/auth", userRoutes);
-app.use("/api/messages", messagesRoute);
+const jwt = require('jsonwebtoken');
+const verifyToken = require('./authMiddleware'); 
 
-mongoose
-  .connect(process.env.MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("Db connection successful");
-  })
-  .catch((err) => {
-    console.log(err.message);
+
+
+const SECRET_KEY = process.env.SECRET_KEY;
+
+app.post('/test/register', (req, res) => {
+  const user = {
+      "companyName": "AffordMedical",
+      "clientID": "e2c7be2e-65d3-4e9b-9c3a-0a0eb9d7257e",
+      "clientSecret": "HejlcldDedWLzVMY",
+      "ownerName": "Ashish",
+      "ownerEmail": "ashish.21scse1010071@gagotiasuniversity.edu.in",
+      "rollNo": "21131011660"
+  };
+
+  jwt.sign({ user }, SECRET_KEY, { expiresIn: '1h' }, (err, token) => {
+    if (err) {
+      res.sendStatus(500);
+    } else {
+      res.json({ token });
+    }
   });
+});
 
-const PORT = process.env.PORT || 5000;
+// Protected route
+app.get('/api/protected', verifyToken, (req, res) => {
+  res.json({
+    message: 'This is a protected route',
+    authData: req.authData
+  });
+});
+
+
+app.use("/api/test", messagesRoute);
+app.use("/api/test", messagesRoute);
+
+const PORT = process.env.PORT ;
 const server = app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
-});
-
-//deployment code
-const path = require("path");
-
-app.use(express.static(path.join(__dirname, "./public/build")));
-app.get("*", function (_, res) {
-  res.sendFile(
-    path.join(__dirname, "./public/build/index.html"),
-    function (err) {
-      res.status(500).send(err);
-    }
-  );
-});
-//deployment code
-const io = socket(server, {
-  cors: {
-    origin: "*",
-    credentials: true,
-  },
-});
-
-global.onlineUsers = new Map();
-io.on("connection", (socket) => {
-  global.chatSocket = socket;
-  socket.on("add-user", (userId) => {
-    onlineUsers.set(userId, socket.id);
-  });
-
-  socket.on("send-msg", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("msg-recieve", data.message);
-    }
-  });
 });
